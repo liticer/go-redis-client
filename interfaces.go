@@ -49,6 +49,7 @@ type Getter interface {
 // Setter interface for setting key commands
 type Setter interface {
 	Set(key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	SetNX(key string, value interface{}, expiration time.Duration) *redis.BoolCmd
 	Append(key, value string) *redis.IntCmd
 	Del(keys ...string) *redis.IntCmd
 	Unlink(keys ...string) *redis.IntCmd

@@ -253,6 +253,9 @@ func (r *Client) RPushX(key string, value interface{}) *redis.IntCmd {
 func (r *Client) Set(key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
 	return r.client.Set(r.k(key), value, expiration)
 }
+func (r *Client) SetNX(key string, value interface{}, expiration time.Duration) *redis.BoolCmd {
+	return r.client.SetNX(r.k(key), value, expiration)
+}
 func (r *Client) Append(key, value string) *redis.IntCmd {
 	return r.client.Append(r.k(key), value)
 }
