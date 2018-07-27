@@ -169,6 +169,10 @@ type Subscriber interface {
 	Subscribe(channels ...string) *redis.PubSub
 }
 
+type Pipeline interface {
+	Pipeline() *redis.Pipeline
+}
+
 // Commander an interface containing all methods
 type Commander interface {
 	Pinger
@@ -185,4 +189,5 @@ type Commander interface {
 	Scanner
 	Publisher
 	Subscriber
+	Pipeline
 }

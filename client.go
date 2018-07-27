@@ -454,6 +454,12 @@ func (r *Client) Subscribe(channels ...string) *redis.PubSub {
 	return r.client.Subscribe(r.ks(channels...)...)
 }
 
+// -------------- Pipeline
+
+func (r *Client) Pipeline() *redis.Pipeline {
+	return r.client.Pipeline()
+}
+
 // -------------- Custom
 func (r *Client) IsCluster() bool {
 	_, ok := r.client.(*redis.ClusterClient)
