@@ -170,7 +170,7 @@ type Subscriber interface {
 }
 
 type Pipeline interface {
-	Pipeline() *redis.Pipeline
+	Pipeline() redis.Pipeliner
 }
 
 // Commander an interface containing all methods

@@ -456,7 +456,7 @@ func (r *Client) Subscribe(channels ...string) *redis.PubSub {
 
 // -------------- Pipeline
 
-func (r *Client) Pipeline() *redis.Pipeline {
+func (r *Client) Pipeline() redis.Pipeliner {
 	return r.client.Pipeline()
 }
 
