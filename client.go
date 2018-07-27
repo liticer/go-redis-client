@@ -3,9 +3,11 @@ package redisClient
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/go-redis/redis"
+	"sort"
 )
 
 // RedisNil means nil reply, .e.g. when key does not exist.
@@ -25,7 +27,7 @@ func NewClient(opts Options) *Client {
 	// Cluster client
 	case ClientCluster:
 		r.client = redis.NewClusterClient(opts.GetClusterConfig())
-	// Standard client also as default
+		// Standard client also as default
 	case ClientNormal:
 		fallthrough
 	default:
@@ -450,6 +452,56 @@ func (r *Client) Publish(channel string, message interface{}) *redis.IntCmd {
 }
 func (r *Client) Subscribe(channels ...string) *redis.PubSub {
 	return r.client.Subscribe(r.ks(channels...)...)
+}
+
+// -------------- Custom
+func (r *Client) IsCluster() bool {
+	_, ok := r.client.(*redis.ClusterClient)
+	return ok
+}
+func (r *Client) ScanAll(match string) ([]string, error) {
+	var keys []string
+	lock := &sync.Mutex{}
+	match = r.k(match)
+	scanFunc := func(client Commander) ([]string, error) {
+		var mKeys []string
+		ks, cursor, err := client.Scan(0, match, 1000).Result()
+		for cursor != 0 {
+			mKeys = append(mKeys, ks...)
+			ks, cursor, err = client.Scan(cursor, match, 1000).Result()
+			if err != nil {
+				return nil, err
+			}
+		}
+		if len(ks) > 0 {
+			mKeys = append(mKeys, ks...)
+		}
+		return mKeys, err
+	}
+
+	var err error
+	cc, ok := r.client.(*redis.ClusterClient)
+	if ok {
+		err = cc.ForEachMaster(func(client *redis.Client) error {
+			mKeys, err := scanFunc(client)
+			if err != nil {
+				return err
+			}
+			lock.Lock()
+			defer lock.Unlock()
+			keys = append(keys, mKeys...)
+			return nil
+		})
+	} else {
+		keys, err = scanFunc(r.client)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	return keys, nil
 }
 
 // ErrNotImplemented not implemented error
